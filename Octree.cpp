@@ -90,6 +90,68 @@ Octant* Octree::createOctant(const double* center, double extent, unsigned start
     return octant;
 }
 
+void Octree::split(Octant* octant) {
+    octant->is_leaf_ = false;
+    std::array<unsigned, 8> child_starts;
+    std::array<unsigned, 8> child_ends;
+    std::array<unsigned, 8> child_size;
+    child_size.fill(0);
+    unsigned idx = octant->start_;
+    for (unsigned i = 0; i < octant->size_; i++) {
+        const double* p = &this->points_[idx * 3];
+        unsigned morton_code = 0;
+        for (int j = 0; j < 3; j++) {
+            if (p[j] > octant->center_[j]) {
+                morton_code |= 1 << j;
+            }
+        }
+
+        if (child_size[morton_code] == 0) {
+            child_starts[morton_code] = idx;
+        } else {
+            this->successors_[child_ends[morton_code]] = idx;
+        }
+        child_size[morton_code] += 1;
+        child_ends[morton_code] = idx;
+        idx = this->successors_[idx];
+    }
+
+    const double child_extent = 0.5 * octant->extent_;
+    bool first_time = true;
+    unsigned last_child_idx = 0;
+    static const double factor[] = {-0.5, 0.5};
+    for (unsigned i = 0; i < 8u; i++) {
+        if (child_size[i] == 0) {
+            continue;
+        }
+        auto child_center = (Eigen::Map<const Eigen::Array3d>(octant->center_.data()) +
+            Eigen::Array3d(
+                factor[(i & 1)> 0] * octant->extent_,
+                factor[(i & 2)> 0] * octant->extent_,
+                factor[(i & 4)> 0] * octant->extent_)).eval();
+
+        octant->children_[i] = pool_.template Allocate<Octant>();
+        octant->children_[i]->is_leaf_ = true;
+        octant->children_[i]->children_.fill(nullptr);
+        std::copy(child_center.data(), child_center.data() + 3, octant->children_[i]->center_.begin());
+        octant->children_[i]->extent_ = child_extent;
+        octant->children_[i]->start_ = child_starts[i];
+        octant->children_[i]->end_ = child_ends[i];
+        octant->children_[i]->size_ = child_size[i];
+
+        if (first_time) {
+            octant->start_ = octant->children_[i]->start_;
+        } else {
+            successors_[octant->children_[last_child_idx]->end_] = octant->children_[i]->start_;
+        }
+        last_child_idx = i;
+        octant->end_ = octant->children_[i]->end_;
+        first_time = false;
+    }
+
+
+}
+
 void Octree::radiusNeibors(const double* query, double sq_dist, std::vector<unsigned>& indices) {
     if (!root_) {
         return;

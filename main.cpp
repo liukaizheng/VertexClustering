@@ -1,6 +1,9 @@
 #include <iostream>
 #include "Octree.h"
 #include "ReadXYZ.h"
+#include "ReadObj.h"
+#include "WriteObj.h"
+#include "VertexClustering.h"
 #include <Eigen/Dense>
 #include <fstream>
 
@@ -15,7 +18,7 @@ void writeXYZ(const std::string& name, const double* points, const std::size_t& 
     }
     out.close();
 }
-/*void writeMesh(const std::string& name, const Mesh& mesh)
+void writeMesh(const std::string& name, const Mesh& mesh)
 {
     Eigen::Map<const Eigen::Matrix<double, -1, -1, Eigen::RowMajor>> V(mesh.vertices_.getVertex(0), mesh.vertices_.size(), 3);
     Eigen::Matrix<index_t, -1, -1> F(mesh.facets_.size() ,3);
@@ -25,11 +28,11 @@ void writeXYZ(const std::string& name, const double* points, const std::size_t& 
         F(i, 2) = mesh.facet_corners_.vertex(i * 3 + 2);
     }
     writeOBJ(name, V, F);
-}*/
+}
 
 int main()
 {
-    std::vector<Eigen::Vector3d> in_points;
+    /*std::vector<Eigen::Vector3d> in_points;
     std::vector<Eigen::Vector3d> in_normal;
     ReadXYZ("test.xyz", in_points, in_normal);
     std::vector<double> raw_points(in_points.size() * 3);
@@ -51,6 +54,16 @@ int main()
     }
 
     sigma::Octree tree;
-    tree.initialize(raw_points.data(), in_points.size());
+    tree.initialize(raw_points.data(), in_points.size());*/
+    Eigen::Matrix<double, -1, -1, Eigen::RowMajor> V;
+    Eigen::Matrix<sigma::index_t, -1, -1, Eigen::RowMajor> F;
+    sigma::readOBJ("cube.obj", V, F);
+    sigma::Mesh mesh(V.data(), V.rows());
+    std::vector<index_t> faces(F.rows() * 3);
+    std::copy(F.data(), F.data() + F.size(), faces.begin());
+    mesh.facets_.assignTriangleMesh(faces);
+    sigma::VertexClustering clustering(0.5, 20);
+    clustering.initialize(mesh);
+    writeMesh("123.obj", mesh);
     return 0;
 }
