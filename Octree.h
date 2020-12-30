@@ -25,10 +25,11 @@ public:
     Octree(const unsigned& bucket_size_ = 1, const double& min_extent_ = 1e-6);
     ~Octree();
 
+    void setMinExtent(const double& extent) { min_extent_ = extent; }
     void initialize(const double* pts, const unsigned& n_points);
     void radiusNeibors(const double* query, double sq_dist, std::vector<unsigned>& indices);
 
-    void split(Octant* octant);
+    bool split(Octant* octant);
 
     Octant* root() { return root_; }
     const Octant* root() const { return root_; }

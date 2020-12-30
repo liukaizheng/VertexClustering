@@ -19,6 +19,7 @@ private:
     void connectAdjacentCorners(index_t t, index_t* adj_corner);
     bool connect(const index_t& t);
     void computeCellGeometricError(Octant* octant);
+    void repairNonmanifoldByCopy();
 
     double rate_;
     unsigned min_n_vertices_;

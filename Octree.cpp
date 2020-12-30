@@ -90,7 +90,10 @@ Octant* Octree::createOctant(const double* center, double extent, unsigned start
     return octant;
 }
 
-void Octree::split(Octant* octant) {
+bool Octree::split(Octant* octant) {
+    if (octant->size_ <= 1 || octant->extent_ < min_extent_) {
+        return false;
+    }
     octant->is_leaf_ = false;
     std::array<unsigned, 8> child_starts;
     std::array<unsigned, 8> child_ends;
@@ -148,8 +151,7 @@ void Octree::split(Octant* octant) {
         octant->end_ = octant->children_[i]->end_;
         first_time = false;
     }
-
-
+    return true;
 }
 
 void Octree::radiusNeibors(const double* query, double sq_dist, std::vector<unsigned>& indices) {

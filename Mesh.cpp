@@ -198,6 +198,7 @@ void MeshEdges::pop()
 MeshFacetsStore::MeshFacetsStore(Mesh& mesh):
     MeshSubElementsStore(mesh)
 {
+    facet_ptr_.resize(1);
 }
 
 index_t MeshFacetsStore::createSubElement()

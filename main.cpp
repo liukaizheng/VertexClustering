@@ -57,7 +57,7 @@ int main()
     tree.initialize(raw_points.data(), in_points.size());*/
     Eigen::Matrix<double, -1, -1, Eigen::RowMajor> V;
     Eigen::Matrix<sigma::index_t, -1, -1, Eigen::RowMajor> F;
-    sigma::readOBJ("cube.obj", V, F);
+    sigma::readOBJ("origin.obj", V, F);
     sigma::Mesh mesh(V.data(), V.rows());
     std::vector<index_t> faces(F.rows() * 3);
     std::copy(F.data(), F.data() + F.size(), faces.begin());
